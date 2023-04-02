@@ -5,19 +5,20 @@
   
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
-  <link rel="dns-prefetch" href="http://example.com">
-  <title>笔记本</title>
+  <link rel="dns-prefetch" href="https://r4mble.github.io">
+  <title>R4mble的个人空间</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="击空明兮溯流光">
 <meta property="og:type" content="website">
-<meta property="og:title" content="笔记本">
-<meta property="og:url" content="http://example.com/index.html">
-<meta property="og:site_name" content="笔记本">
+<meta property="og:title" content="R4mble的个人空间">
+<meta property="og:url" content="https://r4mble.github.io/index.html">
+<meta property="og:site_name" content="R4mble的个人空间">
 <meta property="og:description" content="击空明兮溯流光">
 <meta property="og:locale">
+<meta property="article:author" content="R4mble">
 <meta name="twitter:card" content="summary">
   
-    <link rel="alternative" href="/atom.xml" title="笔记本" type="application/atom+xml">
+    <link rel="alternative" href="/atom.xml" title="R4mble的个人空间" type="application/atom+xml">
   
   
     <link rel="icon" href="/images/favicon.ico">
@@ -129,39 +130,54 @@
           <div id="js-content" class="content-ll">
             
   
-    <article id="post-Async-Profiler" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+    <article id="post-RocketMQ架构" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2023/03/21/Async-Profiler/">Async-Profiler</a>
+      <a class="article-title" href="/2023/04/02/RocketMQ%E6%9E%B6%E6%9E%84/">RocketMQ架构</a>
     </h1>
   
 
         
-        <a href="/2023/03/21/Async-Profiler/" class="archive-article-date">
-  	<time datetime="2023-03-21T04:55:26.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-03-21</time>
+        <a href="/2023/04/02/RocketMQ%E6%9E%B6%E6%9E%84/" class="archive-article-date">
+  	<time datetime="2023-04-02T12:57:09.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-04-02</time>
 </a>
         
       </header>
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h1 id="是什么"><a href="#是什么" class="headerlink" title="是什么"></a>是什么</h1><p>Async-Profiler是一款开源的 Java 性能分析工具，原理是基于 HotSpot 的 API，以微乎其微的性能开销收集程序运行中的堆栈信息、内存分配等信息进行分析。</p>
-<p>阿里的 Arthas 使用 async-profiler 生成 CPU&#x2F;内存火焰图进行性能分析。</p>
-<p>它是开源的、采样分析(只对数据堆栈跟踪进行采样，没有通过注入字节码来记录所有事件)开销低、避免了安全点偏差问题(采集一般需要触发JVM Safepoint导致全局暂停，但是不触发很多信息采集不到)、结果更准确</p>
-<p>可以分析：<br>memory allocation mode：查看内存瓶颈<br>CPU mode：查看CPU占用情况<br>软硬件性能：cache misses, branch misses, page faults, context switches<br>Wall-Clock-I&#x2F;O：查看线程在一段时间内做什么，提供火焰图，线程跟踪可视化。</p>
-<h1 id="怎么用"><a href="#怎么用" class="headerlink" title="怎么用"></a>怎么用</h1><p>.&#x2F;profile.sh -d 30 -f profile.svg 3456<br>对 PID 为 3456 的 java 进程采样 30 秒，然后生成 profile.svg 结果文件</p>
-<p>默认情况下是分析 CPU 性能，如果要进行其他分析，可以使用 -e 参数<br>-e event	profile event: cpu|alloc|lock|cache-misses etc.</p>
-<p>.&#x2F;profiler.sh -d 30 -e cpu -f profile_cpu.html 178189<br>.&#x2F;profiler.sh -d 30 -e alloc -f profile_alloc.html 178189</p>
-<p>当前用户要和目标进程是同一个用户, 注意当前目录要有写的权限<br>-f 新版本需要后缀使用.html</p>
-<h1 id="使用步骤"><a href="#使用步骤" class="headerlink" title="使用步骤"></a>使用步骤</h1><ol>
-<li>先使用jps命令看pid信息</li>
-<li>使用 .&#x2F;profiler.sh -d 20 -f 2449.svg 2449 命令对 2449 号进程采样20秒，然后得到生成的 2449.svg 文件，然后我们使用浏览器打开这个文件，可以看到 CPU 的使用火焰图。火焰图里，横条越长，代表使用的越多，从下到上是调用堆栈信息。点击方法可以看到更详细信息</li>
-<li>使用 .&#x2F;profiler.sh -d 20 -e alloc -f 2449-alloc.svg 2449 分析内存使用情况，依旧是横条越长，代表使用的越多，从下到上是调用堆栈信息</li>
-</ol>
+        <p>MQClientException: No route info of this topic<br>通过自动创建topic或手动创建topic解决</p>
+<blockquote>
+<p>mqbroker -n localhost:9876 autoCreateTopicEnable&#x3D;true<br>不好使.</p>
+</blockquote>
+<p>在正式使用RocketMQ进行消息发送和接收前，要先创建Topic<br>手动创建Topic</p>
+<blockquote>
+<p>mqadmin updateTopic -b localhost:10911 -t TopicTest</p>
+</blockquote>
+<p>OK了~</p>
+<p>阿里给的example里的Producer没设置<br>    producer.setNamesrvAddr(“localhost:9876”);</p>
+<h1 id="消费者的两种类型"><a href="#消费者的两种类型" class="headerlink" title="消费者的两种类型"></a>消费者的两种类型</h1><ul>
+<li>DefaultMQPushConsumer<br> 由系统控制读取操作，收到消息后自动调用传入的处理方法来处理<br> 设置好各种参数和传入处理消息的函数。系统收到消息后自动调用处理函数来处理消息，自动保存Offset，而且加入新的DefaultMQPushConsumer后会自动做负载均衡</li>
+</ul>
+<p>通过“长轮询”方式达到Push效果的方法，长轮询方式既有Pull的优点，又兼具Push方式的实时性</p>
+<p>Push方式的弊端: 加大Server端的工作量，进而影响Server的性能；Client的处理能力各不相同，Client的状态不受Server控制，如果Client不能及时处理Server推送过来的消息，会造成各种潜在问题。</p>
+<p>Pull方式:<br>Client端循环地从Server端拉取消息，主动权在Client手里，自己拉取到一定量消息后，处理妥当了再接着取。<br>Pull方式的问题是循环拉取消息的间隔不好设定，间隔太短就处在一个“忙等”的状态，浪费资源；<br>每个Pull的时间间隔太长，Server端有消息到来时，有可能没有被及时处理。</p>
+<p>长轮询”的核心是，Broker端HOLD住客户端过来的请求一小段时间，<br>在这个时间内有新消息到达，就利用现有的连接立刻返回消息给Consumer。<br>“长轮询”的主动权还是掌握在Consumer手中，Broker即使有大量消息积压，也不会主动推送给Consumer。</p>
+<p>长轮询方式的局限性，是在HOLD住Consumer请求的时候需要占用资源，它适合用在消息队列这种客户端连接数可控的场景中</p>
+<ul>
+<li>DefaultMQPullConsumer<br>读取操作中的大部分功能由使用者自主控制.</li>
+</ul>
+<p>RocketMQ支持两种消息模式：</p>
+<ul>
+<li><p>Clustering<br>同一个ConsumerGroup（GroupName相同）里的每个Consumer只消费所订阅消息的一部分内容，同一个ConsumerGroup里所有的Consumer消费的内容合起来才是所订阅Topic内容的整体，从而达到负载均衡的目的。</p>
+</li>
+<li><p>Broadcasting<br>同一个ConsumerGroup里的每个Consumer都能消费到所订阅Topic的全部消息，也就是一个消息会被多次分发，被多个Consumer消费。</p>
+</li>
+</ul>
 
       
 
@@ -175,11 +191,11 @@
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">Taboola缓存优化</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">RocketMQ</a>
         		</li>
       		 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">JVM</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">MQ</a>
         		</li>
       		
 		</ul>
@@ -189,7 +205,7 @@
 
       
         <p class="article-more-link">
-          <a class="article-more-a" href="/2023/03/21/Async-Profiler/">展开全文 >></a>
+          <a class="article-more-a" href="/2023/04/02/RocketMQ%E6%9E%B6%E6%9E%84/">展开全文 >></a>
         </p>
       
 
@@ -219,50 +235,36 @@
 
 
   
-    <article id="post-广告巨头Taboola推荐服务Java缓存优化之路" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+    <article id="post-Raft算法" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2023/03/20/%E5%B9%BF%E5%91%8A%E5%B7%A8%E5%A4%B4Taboola%E6%8E%A8%E8%8D%90%E6%9C%8D%E5%8A%A1Java%E7%BC%93%E5%AD%98%E4%BC%98%E5%8C%96%E4%B9%8B%E8%B7%AF/">广告巨头Taboola推荐服务Java缓存优化之路</a>
+      <a class="article-title" href="/2023/04/02/Raft%E7%AE%97%E6%B3%95/">Raft算法</a>
     </h1>
   
 
         
-        <a href="/2023/03/20/%E5%B9%BF%E5%91%8A%E5%B7%A8%E5%A4%B4Taboola%E6%8E%A8%E8%8D%90%E6%9C%8D%E5%8A%A1Java%E7%BC%93%E5%AD%98%E4%BC%98%E5%8C%96%E4%B9%8B%E8%B7%AF/" class="archive-article-date">
-  	<time datetime="2023-03-20T09:55:26.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-03-20</time>
+        <a href="/2023/04/02/Raft%E7%AE%97%E6%B3%95/" class="archive-article-date">
+  	<time datetime="2023-04-02T12:46:56.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-04-02</time>
 </a>
         
       </header>
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>现状：一个核心服务Creator处理速度很慢，它为给定的上下文生成排名靠前的列表</p>
-<h1 id="一、分析为啥慢"><a href="#一、分析为啥慢" class="headerlink" title="一、分析为啥慢"></a>一、分析为啥慢</h1><p>CPU占用率低，内存占用率低，用在GC上的时间也短，大概率是IO的问题了。</p>
-<p>使用Async-Profiler来分析：它是开源的、采样分析(只对数据堆栈跟踪进行采样，没有通过注入字节码来记录所有事件)开销低、避免了安全点偏差问题(采集一般需要触发JVM Safepoint导致全局暂停，但是不触发很多信息采集不到)、结果更准确</p>
-<p>运行方式：inferent modes(推理模式)<br>memory allocation mode：查看内存瓶颈<br>CPU mode：查看CPU占用情况<br>Wall-Clock-I&#x2F;O：查看线程在一段时间内做什么</p>
-<p>提供火焰图，线程跟踪可视化。</p>
-<p>通过火焰图发现服务60%的时间在向另一个tensorflow服务进行IO调用，每秒调用800万次<br>tensorflow服务每几天升级一次，这几天内对同一个请求的返回是相同的。</p>
-<h1 id="二、解决方案"><a href="#二、解决方案" class="headerlink" title="二、解决方案"></a>二、解决方案</h1><p>使用Guava缓存，每当tensorflow服务升级，就使缓存失效</p>
-<h1 id="三、遇到问题"><a href="#三、遇到问题" class="headerlink" title="三、遇到问题"></a>三、遇到问题</h1><p>Creator服务一个接一个地挂掉，老年代空间占满。<br>不能heap dump分析，因为是2T的堆，没有那么大的内存，<br>Memory Histogram 内存直方图：每个类在堆上的实例数和它的shallow size</p>
-<p>现在也没有足够的堆空间来做Jmap的Memory Histogram，所以重启服务，配置周期性dump，每小时获取一次内存直方图。</p>
-<p>失效的缓存还占用着内存，因此判断是缓存泄露了。</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Autowired</span></span><br><span class="line"><span class="keyword">private</span> Configurator configurator;</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">volatile</span> Cache cache;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">reload</span><span class="params">()</span> &#123;</span><br><span class="line">      <span class="type">Cache</span> <span class="variable">newCache</span> <span class="operator">=</span> .......;</span><br><span class="line">      cache = newCache;</span><br><span class="line">      configurator.addListener(configName, (oldV, newV) -&gt; cache.resize(newV));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>这里 addListener 只是追加新的 Listener 对象，并不是替换，所以保留了原来的 lambda。lambda 相当于非静态内部类，里面有每次 reload 的新 cache 的引用。内部类的生命周期跟着当前对象，内部类的对象的声明周期跟着 Listener。所以老的 cache 一直无法 GC。<br>如何避免这个问题，第一是需要移除老对象 Listener，如果没有这种移除的 api，那么就传入 WeakReference，例如：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">reload</span><span class="params">()</span> &#123;</span><br><span class="line">      <span class="type">Cache</span> <span class="variable">newCache</span> <span class="operator">=</span> .......;</span><br><span class="line">      cache = newCache;</span><br><span class="line">      WeakReference&lt;Cache&gt; weakR = <span class="keyword">new</span> <span class="title class_">WeakReference</span>(cache);</span><br><span class="line">      configurator.addListener(configName, (oldV, newV) -&gt; &#123;</span><br><span class="line">            <span class="type">Cache</span> <span class="variable">c</span> <span class="operator">=</span> weakR.get();</span><br><span class="line">            <span class="keyword">if</span> (c != <span class="literal">null</span>) c.resize(newV);</span><br><span class="line">&#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h1 id="四、再遇问题：缓存太大内存装不下"><a href="#四、再遇问题：缓存太大内存装不下" class="headerlink" title="四、再遇问题：缓存太大内存装不下"></a>四、再遇问题：缓存太大内存装不下</h1><p>限制缓存大小，同时缓存的命中率也下降了</p>
-<p>CacheKey：long和byte[]<br>Cache&lt;Chche, Double&gt;<br>减少缓存的内存占用：</p>
-<ol>
-<li>Creator有百万个值，但是每个Creator实例只有200个不同的值。可以把long换成int。十亿缓存，每个省4字节。结构也改成：Cache&lt;Integer, Map&lt;Byte[], Double&gt;&gt;</li>
-<li>从Guava Cache到GNU Trove Collections，Trove目标是保持性能的同时减少内存占用，两个主要特性：使用原始类型而不是包装类型；使用开放寻址法而不是链式寻址法</li>
-</ol>
-<p>结果：每个entry从100字节到20字节</p>
-<p>为了减少任务在队列的等待时间，增加线程的数量。CPU占用率低，可以这么做。但是更多的线程栈占用了更多的堆外空间，线程栈大小受-Xss限制</p>
-<p>再次减少缓存在堆上的占用空间，即可增加吞吐量。<br>把70%的缓存放在磁盘，30%放在内存。获取缓存时间稍长，堆空间占用减少，更少的GC，应用延迟更快，加线程增加吞吐量。</p>
+        <h1 id="是什么"><a href="#是什么" class="headerlink" title="是什么"></a>是什么</h1><p>分布式一致性算法</p>
+<h1 id="两种策略"><a href="#两种策略" class="headerlink" title="两种策略"></a>两种策略</h1><p>一是将复杂问题进行分解，在Raft协议中，一致性问题被分解为：leader election、log replication、safety三个简单问题<br>二是减少状态空间中的状态数目</p>
+<h1 id="leader选举过程"><a href="#leader选举过程" class="headerlink" title="leader选举过程"></a>leader选举过程</h1><p>Leader会发送空的AppendEntries RPC作为心跳信号来确立自己的地位，如果follower一段时间(election timeout)没有收到心跳，它就会认为leader已经挂了，发起新的一轮选举。</p>
+<p>选举发起后，一个follower会增加自己的当前term编号并转变为candidate。它会首先投自己一票，然后向其他所有节点并行发起RequestVote RPC，之后candidate状态将可能发生如下三种变化</p>
+<p>赢得选举,成为leader: 如果它在一个term内收到了大多数的选票，将会在接下的剩余term时间内称为leader，然后就可以通过发送心跳确立自己的地位。(每一个server在一个term内只能投一张选票，并且按照先到先得的原则投出)</p>
+<p>其他server成为leader：在等待投票时，可能会收到其他server发出AppendEntries RPC心跳信号，说明其他leader已经产生了。这时通过比较自己的term编号和RPC过来的term编号，如果比对方大，说明leader的term过期了，就会拒绝该RPC,并继续保持候选人身份; 如果对方编号不比自己小,则承认对方的地位,转为follower.</p>
+<p>选票被瓜分,选举失败: 如果没有candidate获取大多数选票, 则没有leader产生, candidate们等待超时后发起另一轮选举. 为了防止下一次选票还被瓜分,必须采取一些额外的措施, raft采用随机election timeout的机制防止选票被持续瓜分。通过将timeout随机设为一段区间上的某个值, 因此很大概率会有某个candidate率先超时然后赢得大部分选票.</p>
+<h1 id="日志复制过程"><a href="#日志复制过程" class="headerlink" title="日志复制过程"></a>日志复制过程</h1><p>客户端提交每一条命令都会被按顺序记录到leader的日志中，每一条命令都包含term编号和顺序索引，然后向其他节点并行发送AppendEntries RPC用以复制命令(如果命令丢失会不断重发)，当复制成功也就是大多数节点成功复制后，leader就会提交命令，即执行该命令并且将执行结果返回客户端，raft保证已经提交的命令最终也会被其他节点成功执行        </p>
+<p>日志对齐</p>
+<h1 id="日志压缩"><a href="#日志压缩" class="headerlink" title="日志压缩"></a>日志压缩</h1><p>随着日志大小的增长，会占用更多的内存空间，处理起来也会耗费更多的时间，对系统的可用性造成影响，因此必须想办法压缩日志大小。Snapshotting是最简单的压缩方法，系统的全部状态会写入一个snapshot保存起来，然后丢弃截止到snapshot时间点之前的所有日志    </p>
 
       
 
@@ -276,11 +278,7 @@
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">架构设计</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color2">Taboola缓存优化</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">一致性算法</a>
         		</li>
       		
 		</ul>
@@ -290,7 +288,7 @@
 
       
         <p class="article-more-link">
-          <a class="article-more-a" href="/2023/03/20/%E5%B9%BF%E5%91%8A%E5%B7%A8%E5%A4%B4Taboola%E6%8E%A8%E8%8D%90%E6%9C%8D%E5%8A%A1Java%E7%BC%93%E5%AD%98%E4%BC%98%E5%8C%96%E4%B9%8B%E8%B7%AF/">展开全文 >></a>
+          <a class="article-more-a" href="/2023/04/02/Raft%E7%AE%97%E6%B3%95/">展开全文 >></a>
         </p>
       
 
@@ -320,6 +318,211 @@
 
 
   
+    <article id="post-Nginx配置" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2023/04/02/Nginx%E9%85%8D%E7%BD%AE/">Nginx配置</a>
+    </h1>
+  
+
+        
+        <a href="/2023/04/02/Nginx%E9%85%8D%E7%BD%AE/" class="archive-article-date">
+  	<time datetime="2023-04-02T11:55:13.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-04-02</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="worker-processes"><a href="#worker-processes" class="headerlink" title="worker_processes"></a>worker_processes</h1><blockquote>
+<p>worker_processes 4; &#x2F;&#x2F; Nginx要生成的worker数量,最佳实践是每个CPU运行1个工作进程</p>
+</blockquote>
+<h1 id="events"><a href="#events" class="headerlink" title="events"></a>events</h1><blockquote>
+<p>worker_connections  1024; &#x2F;&#x2F; 单个进程最大连接数</p>
+</blockquote>
+<blockquote>
+<p>keepalive_timeout 60; &#x2F;&#x2F; 超时时间</p>
+</blockquote>
+<blockquote>
+<p>client_header_buffer_size 4k; &#x2F;&#x2F; 客户端请求头部的缓冲区大小</p>
+</blockquote>
+<h1 id="http"><a href="#http" class="headerlink" title="http"></a>http</h1><blockquote>
+<p>gzip on; &#x2F;&#x2F; 开启gzip压缩输出, 压缩文件的大小，减少了客户端http的传输带宽，因此提高了页面加载速度</p>
+</blockquote>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">http </span><br><span class="line">&#123;</span><br><span class="line">  include       conf/mime.types;</span><br><span class="line">  gzip on;</span><br><span class="line">  gzip_min_length  1000;</span><br><span class="line">  gzip_buffers     4 8k;   </span><br><span class="line">  gzip_http_version 1.1; </span><br><span class="line">  gzip_types       text/plain application/x-javascript text/css application/xml application/javascript application/json;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>sendfile指令指定nginx是否调用sendfile函数来输出文件，对于普通应用设为 on，如果用来进行下载等应用磁盘IO重负载应用，可设置为off，以平衡磁盘与网络I&#x2F;O处理速度，降低系统的负载。注意：如果图片显示不正常把这个改成off。</p>
+<blockquote>
+<p>sendfile on; &#x2F;&#x2F; 开启高效文件传输模式. </p>
+</blockquote>
+<blockquote>
+<p>keepalive_timeout 120; &#x2F;&#x2F; 长连接超时时间，单位是秒</p>
+</blockquote>
+<blockquote>
+<p>limit_zone crawler $binary_remote_addr 10m; &#x2F;&#x2F; 开启限制IP连接数的时候需要使用</p>
+</blockquote>
+<h1 id="跨域配置"><a href="#跨域配置" class="headerlink" title="跨域配置"></a>跨域配置</h1><p>开启跨域请求</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (<span class="variable">$request_method</span> = OPTIONS ) &#123;</span><br><span class="line">    add_header <span class="string">&quot;Access-Control-Allow-Origin&quot;</span>  *;</span><br><span class="line">    add_header <span class="string">&quot;Access-Control-Allow-Methods&quot;</span> <span class="string">&quot;GET, POST, OPTIONS, HEAD&quot;</span>;</span><br><span class="line">    add_header <span class="string">&quot;Access-Control-Allow-Headers&quot;</span> <span class="string">&quot;Authorization, Origin, X-Requested-With, Content-Type, Accept&quot;</span>;</span><br><span class="line">    add_header <span class="string">&#x27;Access-Control-Max-Age&#x27;</span> 600;</span><br><span class="line">    <span class="built_in">return</span> 200;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="跨域传递-Cookie"><a href="#跨域传递-Cookie" class="headerlink" title="跨域传递 Cookie"></a>跨域传递 Cookie</h1><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">location /foo &#123;</span><br><span class="line">    proxy_pass http://localhost:4000;</span><br><span class="line">    proxy_cookie_path /foo <span class="string">&quot;/; SameSite=None; HTTPOnly; Secure&quot;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="健康检查"><a href="#健康检查" class="headerlink" title="健康检查"></a>健康检查</h1><p>Nginx 服务端会按照设定的间隔时间主动向后端的 upstream_server 发出检查请求来验证后端的各个 upstream_server 的状态。如果得到某个服务器失败的返回超过一定次数，比如 3 次就会标记该服务器为异常，就不会将请求转发至该服务器。一般情况下后端服务器需要为这种健康检查专门提供一个低消耗的接口。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">http &#123;</span><br><span class="line">  # 指定一个 upstream 负载均衡组，名称为 evalue</span><br><span class="line">  upstream evalue &#123;</span><br><span class="line">    # 定义组内的节点服务，如果不加 weight 参数，默认就是 Round Robin ，加上了 weight 参数就是加权轮询</span><br><span class="line">    server 192.168.90.100:9999 weight=100;</span><br><span class="line">    server 192.168.90.101:9999 weight=100;</span><br><span class="line">    </span><br><span class="line">    # interval=3000 检查间隔 3 秒 ， rise=3 连续成功3次认为服务健康 ， fall=5 连续失败 5 次认为服务不健康 ， timeout=3000 健康检查的超时时间为 3 秒 ， type=http  检查类型 http</span><br><span class="line">    check interval=3000 rise=3 fall=5 timeout=3000 type=http;</span><br><span class="line">    </span><br><span class="line">    # check_http_send 设定检查的行为：请求类型 url 请求协议 -&gt; HEAD /api/v1/health HTTP/1.0         </span><br><span class="line">    check_http_send &quot;HEAD /api/v1/health HTTP/1.0\r\n\r\n&quot;;</span><br><span class="line">    </span><br><span class="line">    # 设定认为返回正常的响应状态       </span><br><span class="line">    check_http_expect_alive http_2xx http_3xx;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="使用-request-id-实现链路追踪"><a href="#使用-request-id-实现链路追踪" class="headerlink" title="使用 $request_id 实现链路追踪"></a>使用 $request_id 实现链路追踪</h1><p>Nginx 在 1.11.0 版本中就提供了内置变量 $request_id，其原理就是生成 32 位的随机字符串，虽不能比拟 UUID 的概率，但 32 位的随机字符串的重复概率也是微不足道了，所以一般可视为 UUID 来使用。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">location ^~ /habo/gid &#123;</span><br><span class="line">        add_header Cache-Control no-store;</span><br><span class="line">        default_type application/javascript;</span><br><span class="line">        set $unionId $cookie_GID;</span><br><span class="line">        if ($unionId = &quot;&quot;) &#123;</span><br><span class="line">                set $unionId $request_id;</span><br><span class="line">                add_header Set-Cookie &quot;GID=$&#123;unionId&#125;;path=/habo/;max-age=$&#123;GID_MAX_AGE&#125;&quot;;</span><br><span class="line">        &#125;</span><br><span class="line">        return 200 &quot;document.cookie=&#x27;GID=$&#123;unionId&#125;;path=/;max-age=$&#123;GID_MAX_AGE&#125;&#x27;&quot;;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="upstream-lazyegg-net"><a href="#upstream-lazyegg-net" class="headerlink" title="upstream lazyegg.net"></a>upstream lazyegg.net</h1><p>负载均衡配置<br>upstream的负载均衡，weight是权重，可以根据机器配置定义权重。weigth参数表示权值，权值越高被分配到的几率越大。<br>nginx的upstream目前支持4种方式的分配</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">1、轮询（默认）</span><br><span class="line">    每个请求按时间顺序逐一分配到不同的后端服务器，如果后端服务器down掉，能自动剔除。</span><br><span class="line">2、weight</span><br><span class="line">    指定轮询几率，weight和访问比率成正比，用于后端服务器性能不均的情况。</span><br><span class="line">ip_hash</span><br><span class="line">    每个请求按访问ip的hash结果分配，这样每个访客固定访问一个后端服务器，可以解决session的问题</span><br><span class="line">    #upstream bakend &#123;</span><br><span class="line">    #    ip_hash;</span><br><span class="line">    #    server 192.168.0.14:88;</span><br><span class="line">    #    server 192.168.0.15:80;</span><br><span class="line">    #&#125;</span><br><span class="line">3、fair（第三方）</span><br><span class="line">    按后端服务器的响应时间来分配请求，响应时间短的优先分配。</span><br><span class="line">    #upstream backend &#123;</span><br><span class="line">    #    server server1;</span><br><span class="line">    #    server server2;</span><br><span class="line">    #    fair;</span><br><span class="line">    #&#125;</span><br><span class="line">4、url_hash（第三方）</span><br><span class="line">    #按访问url的hash结果来分配请求，使每个url定向到同一个后端服务器，后端服务器为缓存时比较有效。</span><br><span class="line">    #upstream backend &#123;</span><br><span class="line">    #    server squid1:3128;</span><br><span class="line">    #    server squid2:3128;</span><br><span class="line">    #    hash $request_uri;</span><br><span class="line">    #    hash_method crc32;</span><br><span class="line">    #&#125;</span><br><span class="line">    server 192.168.80.121:80 weight=3;</span><br><span class="line">    server 192.168.80.122:80 weight=2;</span><br><span class="line">    server 192.168.80.123:80 weight=3;</span><br></pre></td></tr></table></figure>
+
+<h1 id="server"><a href="#server" class="headerlink" title="server"></a>server</h1><p>虚拟主机的配置<br>JS和CSS缓存时间设置<br>图片缓存时间设置</p>
+<p>为静态文件启用缓存<br>禁用access_logs : 访问日志记录，它记录每个nginx请求，因此消耗了大量CPU资源，从而降低了nginx性能</p>
+<p>Nginx超时怎么办</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">Nginx</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2023/04/02/Nginx%E9%85%8D%E7%BD%AE/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-Nginx" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2023/04/02/Nginx/">Nginx</a>
+    </h1>
+  
+
+        
+        <a href="/2023/04/02/Nginx/" class="archive-article-date">
+  	<time datetime="2023-04-02T11:46:04.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-04-02</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="是什么"><a href="#是什么" class="headerlink" title="是什么"></a>是什么</h1><p>由 C 编写的异步非阻塞的web服务器。可用作反向代理、负载均衡等。C 语言 与 “epoll and queue” 边缘触发 模式 为 Nginx 带来超高的性能与低内存开销的优势。很多 API 网关都基于 Nginx 进行实现。</p>
+<p>一个高性能的HTTP和反向代理web服务器，同时也提供了IMAP&#x2F;POP3&#x2F;SMTP服务</p>
+<h1 id="有哪些模块"><a href="#有哪些模块" class="headerlink" title="有哪些模块"></a>有哪些模块</h1><p>核心模块<br>     HTTP模块、EVENT模块和MAIL模块<br>基础模块<br>     HTTP Access模块、HTTP FastCGI模块、HTTP Proxy模块和HTTP Rewrite模块<br>第三方模块<br>    HTTP Upstream Request Hash模块、Notice模块和HTTP Access Key模块及用户自己开发的模块</p>
+<h1 id="代理模式"><a href="#代理模式" class="headerlink" title="代理模式"></a>代理模式</h1><p>正向代理：正向代理“代理”的是客户端<br>    如果把局域网外的 Internet 想象成一个巨大的资源库，则局域网中的客户端要访 问 Internet，则需要通过代理服务器来访问，这种代理服务就称为正向代理</p>
+<p>反向代理<br>    反向代理是指以代理服务器来接收Internet上的连接请求，然后将请求转发到内部网络上的服务器，并将服务器上得到的结果返回给客户端<br>    为什么使用反向代理<br>        保护和隐藏原始资源服务器<br>        加密和SSL加速<br>        通过缓存静态资源，加速Web请求<br>        实现负载均衡</p>
+<h1 id="Nginx的Rewrite"><a href="#Nginx的Rewrite" class="headerlink" title="Nginx的Rewrite"></a>Nginx的Rewrite</h1><p>可以实现URL重写和重定向功能</p>
+<h1 id="Nginx-高可用"><a href="#Nginx-高可用" class="headerlink" title="Nginx 高可用"></a>Nginx 高可用</h1><p>双机热备方案<br>    在 Keepalived服务正常工作时，主 Master节点会不断地向备节点发送（多播的方式）心跳消息，用以告诉备Backup节点自己还活着，当主 Master节点发生故障时，就无法发送心跳消息，备节点也就因此无法继续检测到来自主 Master节点的心跳了，于是调用自身的接管程序，接管主Master节点的 IP资源及服务。而当主 Master节点恢复时，备Backup节点又会释放主节点故障时自身接管的IP资源及服务，恢复到原来的备用角色。</p>
+<h1 id="Nginx-原理与优化参数配置"><a href="#Nginx-原理与优化参数配置" class="headerlink" title="Nginx 原理与优化参数配置"></a>Nginx 原理与优化参数配置</h1><p>Nginx默认采用多进程工作方式，Nginx启动后，会运行一个master进程和多个worker进程。其中master充当整个进程组与用户的交互接口，同时对进程进行监护，管理worker进程来实现重启服务、平滑升级、更换日志文件、配置文件实时生效等功能。worker用来处理基本的网络事件，worker之间是平等的，他们共同竞争来处理来自客户端的请求<br>好处<br>    可以使用nginx-s reload 热部署<br>    每个worker是独立的进程，不需要加锁，省掉了锁带来的开销。采用独立的进程，可以让互相之间不会影响，一个进程退出后，其它进程还在工作，服务不会中断，master 进程则很快启动新的 worker 进程。</p>
+<p>worker 数和服务器的 cpu 数相等是最为适宜<br>Nginx 同 redis 类似都采用了 io 多路复用机制，每个 worker 都是一个独立的进程，但每个进程里只有一个主线程，通过异步非阻塞的方式来处理请求，即使是千上万个请求也不在话下    </p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">Nginx</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2023/04/02/Nginx/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+  
+    <nav id="page-nav">
+      <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/2/">Next &amp;raquo;</a>
+    </nav>
   
 
 
@@ -330,7 +533,7 @@
   <div class="outer">
     <div id="footer-info">
     	<div class="footer-left">
-    		&copy; 2023 笔记本
+    		&copy; 2023 R4mble
     	</div>
       	<div class="footer-right">
       		<a href="http://hexo.io/" target="_blank">Hexo</a>  Theme <a href="https://github.com/litten/hexo-theme-yilia" target="_blank">Yilia</a> by Litten
@@ -435,6 +638,38 @@ MathJax.Hub.Queue(function() {
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">JVM</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">分布式</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">并发</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">Nginx</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">MySQL</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color1">一致性算法</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">RocketMQ</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color3">MQ</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">分库分表</a>
               </li>
             
             <div class="clearfix"></div>

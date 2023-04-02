@@ -6,20 +6,16 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="https://r4mble.github.io">
-  <title>Async-Profiler | R4mble的个人空间</title>
+  <title>R4mble的个人空间</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="是什么Async-Profiler是一款开源的 Java 性能分析工具，原理是基于 HotSpot 的 API，以微乎其微的性能开销收集程序运行中的堆栈信息、内存分配等信息进行分析。 阿里的 Arthas 使用 async-profiler 生成 CPU&#x2F;内存火焰图进行性能分析。 它是开源的、采样分析(只对数据堆栈跟踪进行采样，没有通过注入字节码来记录所有事件)开销低、避免了安全点偏差问">
-<meta property="og:type" content="article">
-<meta property="og:title" content="Async-Profiler">
-<meta property="og:url" content="https://r4mble.github.io/2023/03/21/Async-Profiler/index.html">
+  <meta name="description" content="击空明兮溯流光">
+<meta property="og:type" content="website">
+<meta property="og:title" content="R4mble的个人空间">
+<meta property="og:url" content="https://r4mble.github.io/page/2/index.html">
 <meta property="og:site_name" content="R4mble的个人空间">
-<meta property="og:description" content="是什么Async-Profiler是一款开源的 Java 性能分析工具，原理是基于 HotSpot 的 API，以微乎其微的性能开销收集程序运行中的堆栈信息、内存分配等信息进行分析。 阿里的 Arthas 使用 async-profiler 生成 CPU&#x2F;内存火焰图进行性能分析。 它是开源的、采样分析(只对数据堆栈跟踪进行采样，没有通过注入字节码来记录所有事件)开销低、避免了安全点偏差问">
+<meta property="og:description" content="击空明兮溯流光">
 <meta property="og:locale">
-<meta property="article:published_time" content="2023-03-21T04:55:26.000Z">
-<meta property="article:modified_time" content="2023-04-01T05:35:19.366Z">
 <meta property="article:author" content="R4mble">
-<meta property="article:tag" content="Taboola缓存优化">
-<meta property="article:tag" content="JVM">
 <meta name="twitter:card" content="summary">
   
     <link rel="alternative" href="/atom.xml" title="R4mble的个人空间" type="application/atom+xml">
@@ -132,14 +128,387 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-Async-Profiler" class="article article-type-post " itemscope itemprop="blogPost">
+            
+  
+    <article id="post-分库分表下的分页查询" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
-    <h1 class="article-title" itemprop="name">
-      Async-Profiler
+    <h1 itemprop="name">
+      <a class="article-title" href="/2023/04/01/%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8%E4%B8%8B%E7%9A%84%E5%88%86%E9%A1%B5%E6%9F%A5%E8%AF%A2/">分库分表下的分页查询</a>
+    </h1>
+  
+
+        
+        <a href="/2023/04/01/%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8%E4%B8%8B%E7%9A%84%E5%88%86%E9%A1%B5%E6%9F%A5%E8%AF%A2/" class="archive-article-date">
+  	<time datetime="2023-04-01T14:47:51.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-04-01</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h1><p>一张十亿数据量订单表按id哈希分片到N台MySQL节点，设计一套方案：以time字段的顺序将分页查询结果展示到前端</p>
+<h1 id="思路"><a href="#思路" class="headerlink" title="思路"></a>思路</h1><ol>
+<li>引入ES，让ES去做分页查询</li>
+<li>新建(time, id)映射表，将非分片键查询转化为分片键查询</li>
+<li>合并所有分片的返回结果，然后在服务端进行筛选</li>
+</ol>
+<p>小tips：<br>‘limit 3’指的是 offset是0，limit是3<br>‘limit 3 offset 5’指的是 offset是5，limit是3<br>‘limit 3, 5’指的是 offset是3，limit是5。（这种写法该被杀头）</p>
+<h2 id="方案一"><a href="#方案一" class="headerlink" title="方案一"></a>方案一</h2><p>对每个分片执行<br>select * from t_order order by time limit x+y;<br>服务端对数据汇总再二次排序</p>
+<p>优点：数据是准确的，x+y可以涵盖到所有的可能结果</p>
+<p>缺点：</p>
+<ul>
+<li>返回数据量太大了</li>
+<li>服务端二次排序</li>
+<li>页数增加之后，分片查询性能差</li>
+</ul>
+<p>思考：业务加个限制，limit * offset &gt; 10000, 就直接返回了。一页100个都翻了100页了，究竟想找个啥。</p>
+<h2 id="方案二"><a href="#方案二" class="headerlink" title="方案二"></a>方案二</h2><ul>
+<li><p>业务限制不允许跳页查询，只允许下一页。<br>每次查询的时候带上 上一页的max_time<br>select * from t_order order by time where time&gt;$time_max limit 100</p>
+</li>
+<li><p>业务允许数据精度损失<br>select * from t_order order by time limit x&#x2F;N, y;</p>
+</li>
+</ul>
+<p>假定数据分布是平均的，每个都x&#x2F;N做offset去找.</p>
+<p>优点：减少数据量，排序的也少了<br>缺点：</p>
+<ul>
+<li>数据不准</li>
+<li>offset过大的时候，还是有性能瓶颈</li>
+</ul>
+<h2 id="方案三"><a href="#方案三" class="headerlink" title="方案三"></a>方案三</h2><p>二次查询：</p>
+<ol>
+<li><p>对每个分片执行：<br>select * from t_order order by time limit x&#x2F;N, y;</p>
+</li>
+<li><p>找出每个分片返回的数据中time最大值time[i], 和所有分片中time最小值timeMin，对非timeMin分片进行二次查询。<br>select * from t_order order by time between timeMin and time[i];</p>
+</li>
+<li><p>对两次结果进行排序, 可以知道每一条记录的准确offset</p>
+</li>
+</ol>
+<p>case：分片一[1,3,5,6], 分片二[2,4,6,8], limit 2 offset 2<br>期望返回：3,4</p>
+<p>第一步: limit 2 offset 1, 结果：[3,5], [4,6]<br>第二步：timeMin是3，第二个分片time[i]是4，结果：[]</p>
+<p>case：分片一[1,3,5,6], 分片二[12,14,16,18], limit 2 offset 2<br>期望返回：5，6<br>第一步: limit 2 offset 1, 结果：[3,5], [14,16]<br>第二步：timeMin是3，第二个分片timeMax是16，分片一查询结果: [5,6] 分片二查询结果：[12,14]</p>
+<p>优化：<br>select * from t_order a left join<br>    (select id from t_order order by time limit x&#x2F;N, y) b on a.id &#x3D; b.id;</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">架构设计</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">MySQL</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">分库分表</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2023/04/01/%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8%E4%B8%8B%E7%9A%84%E5%88%86%E9%A1%B5%E6%9F%A5%E8%AF%A2/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-系统性能优化的核心思想" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2023/03/23/%E7%B3%BB%E7%BB%9F%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E7%9A%84%E6%A0%B8%E5%BF%83%E6%80%9D%E6%83%B3/">系统性能优化的核心思想</a>
+    </h1>
+  
+
+        
+        <a href="/2023/03/23/%E7%B3%BB%E7%BB%9F%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E7%9A%84%E6%A0%B8%E5%BF%83%E6%80%9D%E6%83%B3/" class="archive-article-date">
+  	<time datetime="2023-03-23T05:51:26.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-03-23</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>系统性能优化从哪些层面入手？</p>
+<ol>
+<li>代码。代码质量决定了系统性能基准，如依赖类库的选择，如序列化工具；中间件的选择与参数配置，如是否开启压缩；连接池的配置，长连接还是短连接，同步还是异步; JVM调参</li>
+<li>系统架构层。合理的依赖关系，请求依赖路径模块是否达到最简，一些步骤可以改成异步、定时任务、消息队列等方式；IO密集型操作可以并行；使用缓存，本地缓存或者分布式缓存；池化；</li>
+<li>数据库层面。关系型数据库关注索引优化和sql编写；非关系型mongoDB的分区设计，HBase的rowkey设计。</li>
+</ol>
+<p>核心思想：节约和平衡。<br>平衡：消灭瓶颈，提升系统吞吐量。</p>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">架构设计</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2023/03/23/%E7%B3%BB%E7%BB%9F%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96%E7%9A%84%E6%A0%B8%E5%BF%83%E6%80%9D%E6%83%B3/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-分布式锁" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2023/03/22/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/">分布式锁</a>
+    </h1>
+  
+
+        
+        <a href="/2023/03/22/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/" class="archive-article-date">
+  	<time datetime="2023-03-22T02:55:26.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2023-03-22</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>分布式锁的作用：</p>
+<ol>
+<li>保证数据的正确性：比如：秒杀的时候防止商品超卖，表单重复提交，接口幂等性。</li>
+<li>避免数据重复处理：比如：调度任务在多台机器重复执行，缓存过期所有请求都去加载数据库。</li>
+</ol>
+<p>特性：<br>互斥：同一时刻只能有一个线程获得锁。<br>可重入：当一个线程获取锁后，还可以再次获取这个锁，避免死锁发生。<br>不发生死锁：即使有一个客户端在持有锁的期间崩溃而没有主动解锁也能保证后续其他客户端能加锁。<br>高可用&#x2F;容错性：当小部分节点挂掉后，仍然能够对外提供服务。<br>高性能：要做到高并发、低延迟。<br>支持阻塞和非阻塞</p>
+<h1 id="MySQL分布式锁"><a href="#MySQL分布式锁" class="headerlink" title="MySQL分布式锁"></a>MySQL分布式锁</h1><p>利用唯一索引，获取锁的时候，就插入一条记录。插入成功就代表获取到锁，插入失败就代表获取锁失败。释放锁的时候，就删除这条记录。</p>
+<figure class="highlight sql"><figcaption><span>MySQL分布式锁</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> `distributed_lock` (</span><br><span class="line">  `id` <span class="type">bigint</span> unsigned <span class="keyword">NOT</span> <span class="keyword">NULL</span> AUTO_INCREMENT COMMENT <span class="string">&#x27;主键ID&#x27;</span>,</span><br><span class="line">  `resource_name` <span class="type">varchar</span>(<span class="number">200</span>) <span class="keyword">NOT</span> <span class="keyword">NULL</span> <span class="keyword">DEFAULT</span> <span class="string">&#x27;&#x27;</span> COMMENT <span class="string">&#x27;资源名称（唯一索引）&#x27;</span>,</span><br><span class="line">  <span class="keyword">PRIMARY</span> KEY (`id`),</span><br><span class="line">  <span class="keyword">UNIQUE</span> KEY `uk_resource_name` (`resource_name`)</span><br><span class="line">) ENGINE<span class="operator">=</span>InnoDB <span class="keyword">DEFAULT</span> CHARSET<span class="operator">=</span>utf8 COMMENT<span class="operator">=</span><span class="string">&#x27;分布式锁&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> distributed_lock (`resource_name`) <span class="keyword">VALUES</span> (<span class="string">&#x27;资源1&#x27;</span>);</span><br><span class="line"><span class="keyword">DELETE</span> <span class="keyword">FROM</span> distributed_lock <span class="keyword">WHERE</span> resource_name <span class="operator">=</span> <span class="string">&#x27;资源1&#x27;</span>;</span><br></pre></td></tr></table></figure>
+
+<p>问题：</p>
+<ol>
+<li>属于数据库 IO 操作，效率不高，而且频繁操作会增大数据库的开销，因此这种方式在高并发、高性能的场景中用的不多</li>
+<li>这把锁不支持阻塞，insert 失败立即就返回了。当然可以用 while 循环直到插入成功，不过自旋也会占用 CPU</li>
+<li>这把锁不是可重入的，已经获取到锁的线程再次插入也会失败，我们可以增加两列，一列记录获取到锁的节点和线程，另一列记录加锁次数。获取锁，次数加一，释放锁，次数减一，次数为零就删除这把锁。</li>
+<li>这把锁没有过期时间，如果业务处理失败或者机器宕机，导致没有释放锁，锁就会一直存在，其他线程也无法获取到锁。我们可以增加一列锁过期时间，再启动一个异步任务扫描过期时间大于当前时间的锁就删除</li>
+</ol>
+<p>优化：</p>
+<figure class="highlight sql"><figcaption><span>MySQL分布式锁</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> `distributed_lock` (</span><br><span class="line">  `id` <span class="type">bigint</span> unsigned <span class="keyword">NOT</span> <span class="keyword">NULL</span> AUTO_INCREMENT COMMENT <span class="string">&#x27;主键ID&#x27;</span>,</span><br><span class="line">  `resource_name` <span class="type">varchar</span>(<span class="number">200</span>) <span class="keyword">NOT</span> <span class="keyword">NULL</span> <span class="keyword">DEFAULT</span> <span class="string">&#x27;&#x27;</span> COMMENT <span class="string">&#x27;资源名称（唯一索引）&#x27;</span>,</span><br><span class="line">  `owner` <span class="type">varchar</span>(<span class="number">200</span>) <span class="keyword">NOT</span> <span class="keyword">NULL</span> <span class="keyword">DEFAULT</span> <span class="string">&#x27;&#x27;</span> COMMENT <span class="string">&#x27;锁持有者（机器码+线程名称）&#x27;</span>,</span><br><span class="line">  `lock_count` <span class="type">int</span> <span class="keyword">NOT</span> <span class="keyword">NULL</span> <span class="keyword">DEFAULT</span> <span class="string">&#x27;0&#x27;</span> COMMENT <span class="string">&#x27;加锁次数&#x27;</span>,</span><br><span class="line">  `expire_time` datetime <span class="keyword">NOT</span> <span class="keyword">NULL</span> <span class="keyword">DEFAULT</span> <span class="built_in">CURRENT_TIMESTAMP</span> COMMENT <span class="string">&#x27;锁过期时间&#x27;</span>,</span><br><span class="line">  <span class="keyword">PRIMARY</span> KEY (`id`),</span><br><span class="line">  <span class="keyword">UNIQUE</span> KEY `uk_resource_name` (`resource_name`)</span><br><span class="line">) ENGINE<span class="operator">=</span>InnoDB <span class="keyword">DEFAULT</span> CHARSET<span class="operator">=</span>utf8 COMMENT<span class="operator">=</span><span class="string">&#x27;分布式锁&#x27;</span>;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>问题：<br>业务逻辑没处理完，锁过期了。假如我们设置锁过期时间是 6 秒，正常情况下业务逻辑可以在 6 秒内处理完成，但是当 JVM 发生 FullGC 或者调用第三方服务出现网络延迟，业务逻辑还没处理完，锁已经过期，被删掉，然后被其他线程获取到锁。</p>
+<p>锁续期：获取锁的同时，启动一个异步任务，每当业务执行到三分之一时间，也就是 6 秒中的第 2 秒的时候，就自动延长锁过期时间，继续延长到 6 秒，这样就能保证业务逻辑处理完成之前锁不会过期。</p>
+<h1 id="Redis分布式锁"><a href="#Redis分布式锁" class="headerlink" title="Redis分布式锁"></a>Redis分布式锁</h1><ol>
+<li>使用setnx，需要加上过期时间，但是两条命令就不是原子的了。<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 1. 获取锁</span></span><br><span class="line">redis.setnx(<span class="string">&#x27;resource_name1&#x27;</span>, <span class="string">&#x27;owner1&#x27;</span>)</span><br><span class="line"><span class="comment">// 2. 增加锁过期时间</span></span><br><span class="line">redis.exprire(<span class="string">&#x27;resource_name1&#x27;</span>, <span class="number">6</span>, TimeUnit.SECONDS)</span><br></pre></td></tr></table></figure></li>
+<li>Redis 2.6.12之后提供复合命令<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">redis.set(<span class="string">&#x27;resource_name1&#x27;</span>, <span class="string">&#x27;owner1&#x27;</span>,<span class="string">&quot;NX&quot;</span> <span class="string">&quot;EX&quot;</span>, <span class="number">6</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment">// 释放锁</span></span><br><span class="line"><span class="keyword">if</span> (<span class="string">&#x27;owner1&#x27;</span>.equals(redis.get(<span class="string">&#x27;resource_name1&#x27;</span>)))&#123;</span><br><span class="line">  redis.del(<span class="string">&#x27;resource_name1&#x27;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+释放锁的时候两条命令，不是原子的。需要引入Lua脚本：<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">String</span> <span class="variable">script</span> <span class="operator">=</span> <span class="string">&quot;if redis.call(&#x27;get&#x27;, KEYS[1]) == ARGV[1] then return redis.call(&#x27;del&#x27;, KEYS[1]) else return 0 end&quot;</span>;</span><br><span class="line">redis.eval(script, Collections.singletonList(<span class="string">&#x27;resource_name1&#x27;</span>), Collections.singletonList(<span class="string">&#x27;owner1&#x27;</span>))</span><br></pre></td></tr></table></figure></li>
+</ol>
+<p>锁续期问题：<br>Redis 客户端 Redisson 已经帮我们实现续期的功能，叫“WatchDog”（看门狗），在我们调用 lock 自动唤醒“看门狗”。</p>
+<ol start="3">
+<li>RedLock：高可用分布式锁，多个独立Redis节点组成，不是主从或者集群。</li>
+</ol>
+<ul>
+<li>获取锁流程：<ol>
+<li>获取当前时间 T1，作为后续的计时依据；</li>
+<li>按顺序地，依次向 5 个独立的节点来尝试获取锁<ol>
+<li>（SET resource_name my_random_value NX PX 30000）</li>
+</ol>
+</li>
+<li>计算获取锁总共花了多少时间，判断获取锁成功与否<ol>
+<li>时间：T2-T1</li>
+<li>多数节点的锁（N&#x2F;2+1）</li>
+</ol>
+</li>
+<li>当获取锁成功后的有效时间，要从初始的时间减去第三步算出来的消耗时间</li>
+<li>如果没能获取锁成功，尽快释放掉锁。</li>
+</ol>
+</li>
+</ul>
+<p>顺序发起命令的原因：如果不顺序会出现客户端A获取到1号节点和2号节点，客户端B获取到3号节点和4号节点，客户端 C 先获取到 5 号节点，满足不了多数原则。</p>
+<p>向每个节点获取锁的超时时间限制：这个时间远小于锁的有限期，如几毫秒到几十毫秒，防止向某一个节点获取锁时，等待时间过长，从而导致获取锁的整体时间过长。</p>
+<ul>
+<li>释放锁流程<br>向所有节点发起释放锁操作，无论有没有成功设置过</li>
+</ul>
+<h1 id="zookeeper分布式锁"><a href="#zookeeper分布式锁" class="headerlink" title="zookeeper分布式锁"></a>zookeeper分布式锁</h1><p>zookeeper 采用树形节点，类似 Linux 目录文件结构，同一目录下的节点名称不能重复。<br>节点有分为四种类型：<br>持久节点： 一旦创建，永久存储在服务器上，除非手动删除。<br>临时节点： 生命周期与客户端绑定，客户端断开连接，节点就被自动删除。<br>持久顺序节点： 特性同持久节点，只是在节点名称后面追加自增有序数字。<br>临时顺序节点： 特性同临时节点，只是在节点名称后面追加自增有序数字。</p>
+<p>zookeeper 还有个监听-通知机制，客户端可以在资源节点上创建 watch 事件。当节点发生变化，会通知客户端，客户端可以根据变化做相应的业务处理。</p>
+<p>利用临时顺序节点的特性创建分布式锁，分以下三步：</p>
+<ol>
+<li>在资源&#x2F;resource1 目录下创建临时顺序节点 node</li>
+<li>获取&#x2F;resource1 目录下的所有节点，如果当前节点序号最小，代表加锁成功</li>
+<li>如果不是，就是 watch 监听序号最小的节点</li>
+</ol>
+<p>zookeeper实现分布式锁的优点：</p>
+<ol>
+<li>由于创建的临时节点，断开连接后自动删除，所以无需设置锁超时时间，也就不用考虑不释放和锁续期</li>
+<li>由于节点上存储的创建人信息，锁也就支持可重入</li>
+<li>由于可以监听节点，也就实现了可阻塞</li>
+</ol>
+<h1 id="etcd分布式锁"><a href="#etcd分布式锁" class="headerlink" title="etcd分布式锁"></a>etcd分布式锁</h1><p>基础机制：</p>
+<ul>
+<li>Lease机制<br>租约机制（TTL，Time To Live），etcd 可以为存储的 key-value 对设置租约，当租约到期，key-value 将失效删除；同时也支持续约，通过客户端可以在租约到期之前续约， 以避免 key-value 对过期失效。</li>
+</ul>
+<p>Lease 机制可以保证分布式锁的安全性，为锁对应的 key 配置租约， 即使锁的持有者因故障而不能主动释放锁，锁也会因租约到期而自动释放。</p>
+<ul>
+<li><p>Revision 机制<br>每个 key 带有一个 Revision 号，每进行一次事务便+1，它是全局唯一的， 通过 Revision 的大小就可以知道进行写操作的顺序。<br>在实现分布式锁时，多个客户端同时抢锁， 根据 Revision 号大小依次获得锁，可以避免 “羊群效应” ，实现公平锁。这和 zookeeper 的临时顺序节点+监听机制可以避免羊群效应的原理是一致的。</p>
+</li>
+<li><p>Prefix 机制<br>一个名为 &#x2F;etcd&#x2F;lock 的锁，两个争抢它的客户端进行写操作， 实际写入的 key 分别为：key1&#x3D;”&#x2F;etcd&#x2F;lock&#x2F;UUID1”，key2&#x3D;”&#x2F;etcd&#x2F;lock&#x2F;UUID2”。<br>写操作都会成功，但返回的 Revision 不一样， 那么，如何判断谁获得了锁呢？通过前缀 &#x2F;etcd&#x2F;lock 查询，返回包含两个 key-value 对的的 KeyValue 列表， 同时也包含它们的 Revision，通过 Revision 大小，客户端可以判断自己是否获得锁。</p>
+</li>
+<li><p>Watch 机制<br>Watch 机制支持 Watch 某个固定的 key，也支持 Watch 一个范围（前缀机制）。<br>当被 Watch 的 key 或范围发生变化，客户端将收到通知；在实现分布式锁时，如果抢锁失败， 可通过 Prefix 机制返回的 Key-Value 列表获得 Revision 比自己小且相差最小的 key（称为 pre-key）， 对 pre-key 进行监听，因为只有它释放锁，自己才能获得锁，如果 Watch 到 pre-key 的 DELETE 事件， 则说明 pre-key 已经释放，自己将持有锁。</p>
+</li>
+</ul>
+<h2 id="实现流程"><a href="#实现流程" class="headerlink" title="实现流程"></a>实现流程</h2><ol>
+<li><p>建立连接<br>客户端连接 etcd，以 &#x2F;etcd&#x2F;lock 为前缀创建全局唯一的 key， 假设第一个客户端对应的 key&#x3D;”&#x2F;etcd&#x2F;lock&#x2F;UUID1”，第二个为 key&#x3D;”&#x2F;etcd&#x2F;lock&#x2F;UUID2”； 客户端分别为自己的 key 创建租约 - Lease，租约的长度根据业务耗时确定；</p>
+</li>
+<li><p>创建定时任务作为租约的“心跳”<br>当一个客户端持有锁期间，其它客户端只能等待，为了避免等待期间租约失效， 客户端需创建一个定时任务作为“心跳”进行续约。此外，如果持有锁期间客户端崩溃， 心跳停止，key 将因租约到期而被删除，从而锁释放，避免死锁；</p>
+</li>
+<li><p>客户端将自己全局唯一的 key 写入 etcd<br>执行 put 操作，将步骤 1 中创建的 key 绑定租约写入 Etcd，根据 Etcd 的 Revision 机制， 假设两个客户端 put 操作返回的 Revision 分别为 1、2，客户端需记录 Revision 用于接下来判断自己是否获得锁；</p>
+</li>
+<li><p>客户端判断是否获得锁<br>客户端以前缀 &#x2F;etcd&#x2F;lock&#x2F; 读取 key-Value 列表，判断自己 key 的 Revision 是否为当前列表中 最小的，如果是则认为获得锁；否则监听列表中前一个 Revision 比自己小的 key 的删除事件，一旦监听到删除事件或者因租约失效而删除的事件，则自己获得锁；</p>
+</li>
+<li><p>执行业务<br>获得锁后，操作共享资源，执行业务代码</p>
+</li>
+<li><p>释放锁<br>完成业务流程后，删除对应的 key 释放锁</p>
+</li>
+</ol>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">分布式</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">并发</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2023/03/22/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-Async-Profiler" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2023/03/21/Async-Profiler/">Async-Profiler</a>
     </h1>
   
 
@@ -191,84 +560,16 @@
       
 
       
-
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2023/03/21/Async-Profiler/">展开全文 >></a>
+        </p>
       
-        
-<div class="share-btn share-icons tooltip-left">
-  <div class="tooltip tooltip-east">
-    <span class="tooltip-item">
-      <a href="javascript:;" class="share-sns share-outer">
-        <i class="icon icon-share"></i>
-      </a>
-    </span>
-    <span class="tooltip-content">
-      <div class="share-wrap">
-        <div class="share-icons">
-          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
-            <i class="icon icon-weibo"></i>
-          </a>
-          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
-            <i class="icon icon-weixin"></i>
-          </a>
-          <a class="qq share-sns" href="javascript:;" data-type="qq">
-            <i class="icon icon-qq"></i>
-          </a>
-          <a class="douban share-sns" href="javascript:;" data-type="douban">
-            <i class="icon icon-douban"></i>
-          </a>
-          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
-            <i class="icon icon-qzone"></i>
-          </a>
-          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
-            <i class="icon icon-facebook"></i>
-          </a>
-          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
-            <i class="icon icon-twitter"></i>
-          </a>
-          <a class="google share-sns" href="javascript:;" data-type="google">
-            <i class="icon icon-google"></i>
-          </a>
-        </div>
-      </div>
-    </span>
-  </div>
-</div>
 
-<div class="page-modal wx-share js-wx-box">
-    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
-    <p>扫一扫，分享到微信</p>
-    <div class="wx-qrcode">
-      <img src="//pan.baidu.com/share/qrcode?url=https://r4mble.github.io/2023/03/21/Async-Profiler/" alt="微信分享二维码">
-    </div>
-</div>
-
-<div class="mask js-mask"></div>
       
       <div class="clearfix"></div>
     </div>
   </div>
 </article>
-
-  
-<nav id="article-nav">
-  
-    <a href="/2023/03/22/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/" id="article-nav-newer" class="article-nav-link-wrap">
-      <i class="icon-circle-left"></i>
-      <div class="article-nav-title">
-        
-          分布式锁
-        
-      </div>
-    </a>
-  
-  
-    <a href="/2023/03/20/%E5%B9%BF%E5%91%8A%E5%B7%A8%E5%A4%B4Taboola%E6%8E%A8%E8%8D%90%E6%9C%8D%E5%8A%A1Java%E7%BC%93%E5%AD%98%E4%BC%98%E5%8C%96%E4%B9%8B%E8%B7%AF/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">广告巨头Taboola推荐服务Java缓存优化之路</div>
-      <i class="icon-circle-right"></i>
-    </a>
-  
-</nav>
-
 
 <aside class="wrap-side-operation">
     <div class="mod-side-operation">
@@ -283,52 +584,17 @@
         </div>
         
         
-        <div class="toc-container tooltip-left">
-            <i class="icon-font icon-category"></i>
-            <div class="tooltip tooltip-east">
-                <span class="tooltip-item">
-                </span>
-                <span class="tooltip-content">
-                    <div class="toc-article">
-                    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%98%AF%E4%BB%80%E4%B9%88"><span class="toc-number">1.</span> <span class="toc-text">是什么</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%80%8E%E4%B9%88%E7%94%A8"><span class="toc-number">2.</span> <span class="toc-text">怎么用</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E6%AD%A5%E9%AA%A4"><span class="toc-number">3.</span> <span class="toc-text">使用步骤</span></a></li></ol>
-                    </div>
-                </span>
-            </div>
-        </div>
-        
     </div>
 </aside>
 
 
 
-  
-  <div class="duoshuo">
-	<!-- 多说评论框 start -->
-	<div class="ds-thread" data-thread-key="Async-Profiler" data-title="Async-Profiler" data-url="https://r4mble.github.io/2023/03/21/Async-Profiler/"></div>
-	<!-- 多说评论框 end -->
-	<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
-	<script type="text/javascript">
-	var duoshuoQuery = {short_name:"true"};
-	(function() {
-		var ds = document.createElement('script');
-		ds.type = 'text/javascript';ds.async = true;
-		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
-		ds.charset = 'UTF-8';
-		(document.getElementsByTagName('head')[0] 
-		 || document.getElementsByTagName('body')[0]).appendChild(ds);
-	})();
-	</script>
-	<!-- 多说公共JS代码 end -->
-</div>
 
   
   
-  
-
-  
-
-  
-
+    <nav id="page-nav">
+      <a class="extend prev" rel="prev" href="/">&amp;laquo; Prev</a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/3/">Next &amp;raquo;</a>
+    </nav>
   
 
 
@@ -351,8 +617,8 @@
     <script>
 	var yiliaConfig = {
 		mathjax: true,
-		isHome: false,
-		isPost: true,
+		isHome: true,
+		isPost: false,
 		isArchive: false,
 		isTag: false,
 		isCategory: false,
